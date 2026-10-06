@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>I'm Sorry ❤️</title>
+<style>
+  :root { --pink:#ff5c8a; --bg:#fff0f4; --ink:#4a2030; }
+  * { box-sizing:border-box; margin:0; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body { font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--ink);
+         overflow-x:hidden; text-align:center; }
+  section { min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+            justify-content:center; padding:24px 16px; gap:20px; }
+  .hidden { display:none !important; }
+  h1 { font-size:2rem; } h2 { font-size:1.5rem; }
+  p { font-size:1.1rem; line-height:1.5; max-width:340px; }
+  button { font:inherit; font-size:1.1rem; border:0; border-radius:999px; padding:14px 28px;
+           background:var(--pink); color:#fff; box-shadow:0 6px 16px #ff5c8a55; }
+  button:active { transform:scale(.95); }
+  .envelope { font-size:6rem; animation:bob 1.6s ease-in-out infinite; }
+  @keyframes bob { 50% { transform:translateY(-12px) rotate(-4deg); } }
+
+  /* photo swiper: native scroll-snap */
+  .photos { display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory;
+            width:100%; max-width:100%; padding:12px 8%; scrollbar-width:none; }
+  .photos::-webkit-scrollbar { display:none; }
+  figure { flex:0 0 min(70vw, 300px); scroll-snap-align:center; background:#fff; padding:10px 10px 16px;
+           border-radius:12px; box-shadow:0 8px 24px #0002; }
+  figure:nth-child(odd) { transform:rotate(-2deg); } figure:nth-child(even) { transform:rotate(2deg); }
+  figure img { width:100%; max-height:50dvh; aspect-ratio:3/4; object-fit:cover; border-radius:8px; display:block; }
+  figcaption { margin-top:10px; font-size:1rem; }
+  .hint { font-size:.9rem; opacity:.6; }
+
+  .meter { width:100%; max-width:320px; height:18px; background:#fff; border-radius:999px; overflow:hidden; }
+  .meter div { height:100%; width:0; background:var(--pink); transition:width .3s; }
+
+  .btns { display:flex; gap:16px; position:relative; }
+  #no { background:#999; position:relative; transition:transform .2s; }
+
+  .heart { position:fixed; bottom:-40px; font-size:28px; pointer-events:none; animation:up 3s linear forwards; }
+  @keyframes up { to { transform:translateY(-115dvh) rotate(30deg); opacity:0; } }
+</style>
+</head>
+<body>
+
+<!-- 1: envelope -->
+<section id="s1">
+  <div class="envelope">💌</div>
+  <h1>Hey you…</h1>
+  <p>Someone has something to say. Tap to open.</p>
+  <button onclick="go('s2')">Open 💗</button>
+</section>
+
+<!-- 2: apology -->
+<section id="s2" class="hidden">
+  <h2>I'm really sorry 🥺</h2>
+  <p>4 whole days. 96 hours. And we didn't even talk properly. A few half-hearted texts aren't what you deserve, and that's on me.</p>
+  <p>You deserve real conversations, not silence. I missed you every single one of those hours.</p>
+  <button onclick="go('s3')">Keep going →</button>
+</section>
+
+<!-- 3: photos -->
+<section id="s3" class="hidden">
+  <h2>Remember these? 📸</h2>
+  <div class="photos" id="photos"></div>
+  <p class="hint">swipe ← →</p>
+  <button onclick="go('s4')">Next →</button>
+</section>
+
+<!-- 4: tap-to-fill sorry meter -->
+<section id="s4" class="hidden">
+  <h2>How sorry am I?</h2>
+  <p>Tap the heart to find out</p>
+  <div class="envelope" id="tapHeart" style="animation:none">❤️</div>
+  <div class="meter"><div id="fill"></div></div>
+  <p id="meterText">0%</p>
+</section>
+
+<!-- 5: forgive me? -->
+<section id="s5" class="hidden">
+  <h2>So… do you forgive me? 🥹</h2>
+  <div class="btns">
+    <button id="yes" onclick="forgiven()">Yes 💖</button>
+    <button id="no">No</button>
+  </div>
+</section>
+
+<!-- 6: done -->
+<section id="s6" class="hidden">
+  <div class="envelope">🥰</div>
+  <h1>Thank you!</h1>
+  <p>No more 4-day gaps, I promise. Real talks from now on. Now go check your phone, I'm calling you 📞</p>
+</section>
+
+<script>
+  // Put your photos in a "photos" folder next to this file and edit captions here.
+  const PHOTOS = [
+    ['photos/1.jpeg', 'Us being cute 💕'],
+    ['photos/2.jpeg', 'My favorite smile'],
+  ];
+  const box = document.getElementById('photos');
+  for (const [src, cap] of PHOTOS) {
+    const f = document.createElement('figure');
+    f.innerHTML = `<img src="${src}" alt="${cap}" loading="lazy"><figcaption>${cap}</figcaption>`;
+    f.querySelector('img').onerror = () => f.remove(); // skip missing photos
+    box.append(f);
+  }
+
+  function go(id) {
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    hearts(6);
+    navigator.vibrate?.(30);
+  }
+
+  function hearts(n) {
+    for (let i = 0; i < n; i++) setTimeout(() => {
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = ['❤️','💖','💕','💗','🥺'][Math.random()*5|0];
+      h.style.left = Math.random()*90 + 'vw';
+      document.body.append(h);
+      setTimeout(() => h.remove(), 3000);
+    }, i * 120);
+  }
+
+  // sorry meter: overflows past 100% on purpose
+  let pct = 0;
+  const msgs = { 100:'100%… wait it keeps going', 200:'200%!!', 300:'Infinity sorry 💯' };
+  document.getElementById('tapHeart').onclick = e => {
+    pct += 20;
+    e.target.style.transform = `scale(${1 + Math.min(pct, 300)/400})`;
+    document.getElementById('fill').style.width = Math.min(pct, 100) + '%';
+    document.getElementById('meterText').textContent = msgs[pct] || pct + '%';
+    hearts(2);
+    if (pct >= 300) setTimeout(() => go('s5'), 900);
+  };
+
+  // "No" button runs away
+  const no = document.getElementById('no');
+  const yes = document.getElementById('yes');
+  let scale = 1;
+  const flee = e => {
+    e.preventDefault();
+    no.style.transform = `translate(${(Math.random()-.5)*220}px, ${(Math.random()-.5)*260}px)`;
+    yes.style.transform = `scale(${scale += .15})`;
+    navigator.vibrate?.(15);
+  };
+  no.addEventListener('touchstart', flee, { passive:false });
+  no.addEventListener('click', flee);
+
+  function forgiven() { go('s6'); hearts(40); navigator.vibrate?.([100,50,100]); }
+</script>
+</body>
+</html>
